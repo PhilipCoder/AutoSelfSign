@@ -8,6 +8,8 @@ let config = {
     installCertWindows: true,
 
     pkcs12CertFileName: "certP12",
+    intermediateFileName: "ca",
+    chainedCertFileName: "chainedCert",
     certFileName: "cert",
     keyFileName: "key"
 };

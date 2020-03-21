@@ -13,6 +13,7 @@ const pem = require("pem");
  */
 
 async function autoSelfSign(config) {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     validateConfig(config);
     let certFileStats = await checkCertFiles(config);
     let pkcs12GenerationResult = await generatePKCS12(certFileStats, config);
@@ -31,6 +32,8 @@ async function cleanup(config, pkcs12GenerationResult, certInstallationResult) {
     if (certFileStats.cert.fileExists) fs.unlinkSync(certFileStats.cert.filePath);
     if (certFileStats.key.fileExists) fs.unlinkSync(certFileStats.key.filePath);
     if (certFileStats.pkcs12.fileExists) fs.unlinkSync(certFileStats.pkcs12.filePath);
+    if (certFileStats.chained.fileExists) fs.unlinkSync(certFileStats.chained.filePath);
+    if (certFileStats.intermediate.fileExists) fs.unlinkSync(certFileStats.intermediate.filePath);
 }
 
 //Installs the certificate into the windows Trusted Root Store.
@@ -69,22 +72,35 @@ function saveX509Values(certFileStats, x509Values) {
     if (certFileStats.pkcs12.fileExists) return;
     fs.writeFileSync(certFileStats.cert.filePath, x509Values.cert);
     fs.writeFileSync(certFileStats.key.filePath, x509Values.key);
+    fs.writeFileSync(certFileStats.chained.filePath, x509Values.chained);
+    fs.writeFileSync(certFileStats.intermediate.filePath, x509Values.intermediate);
+
 }
 
 //Generate x.509 values from the PKCS12 certificate using OpenSSL.
 function generateCert(certFileStats, certStatsPKCS12) {
     return new Promise((resolve, reject) => {
-        if (certFileStats.pkcs12.fileExists && certFileStats.cert.fileExists && certFileStats.key.fileExists) {
+        if (
+            certFileStats.pkcs12.fileExists && 
+            certFileStats.cert.fileExists && 
+            certFileStats.key.fileExists &&
+            certFileStats.chained.fileExists &&
+            certFileStats.intermediate.fileExists
+            ) {
             resolve({
                 key: fs.readFileSync(certFileStats.key.filePath, 'utf8'),
-                cert: fs.readFileSync(certFileStats.cert.filePath, 'utf8')
+                cert: fs.readFileSync(certFileStats.cert.filePath, 'utf8'),
+                chained: fs.readFileSync(certFileStats.cert.filePath, 'utf8'),
+                intermediate: fs.readFileSync(certFileStats.cert.filePath, 'utf8')
             });
         } else {
             process.env.OPENSSL_BIN = path.join(__dirname, "bin", "openssl", "openssl.exe");
             pem.readPkcs12(certStatsPKCS12.pkcs12.filePath, { p12Password: "changeit" }, (err, cert) => {
                 resolve({
                     key: cert.key,
-                    cert: cert.cert
+                    cert: cert.cert,
+                    intermediate: cert.ca[0],
+                    chained: [cert.cert,...cert.ca].join("\n")
                 });
             });
         }
@@ -146,6 +162,14 @@ async function checkCertFiles(config) {
         key: {
             fileExists: fs.existsSync(path.join(config.certificateFolder, `${config.keyFileName}.key`)),
             filePath: path.join(config.certificateFolder, `${config.keyFileName}.key`)
+        },
+        chained: {
+            fileExists: fs.existsSync(path.join(config.certificateFolder, `${config.chainedCertFileName}.cert`)),
+            filePath: path.join(config.certificateFolder, `${config.chainedCertFileName}.cert`)
+        },
+        intermediate: {
+            fileExists: fs.existsSync(path.join(config.certificateFolder, `${config.intermediateFileName}.cert`)),
+            filePath: path.join(config.certificateFolder, `${config.intermediateFileName}.cert`)
         }
     };
 }

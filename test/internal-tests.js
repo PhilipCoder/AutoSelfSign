@@ -4,7 +4,7 @@ const path = require("path");
 const fs = require("fs");
 const https = require("https");
 const exec = require('child_process').exec
-
+const axios = require('axios');
 describe('internal-test', function () {
     it('checkCertFiles', async function () {
         let config = getConfig();
@@ -100,7 +100,8 @@ describe('internal-test', function () {
         fs.unlinkSync(certFileStats.pkcs12.filePath);
         fs.unlinkSync(certFileStats.cert.filePath);
         fs.unlinkSync(certFileStats.key.filePath);
-
+        fs.unlinkSync(certFileStats.chained.filePath);
+        fs.unlinkSync(certFileStats.intermediate.filePath);
     });
 
     //Commented out because it actually installs the certificate. Uncomment to test.
@@ -130,12 +131,12 @@ describe('internal-test', function () {
         
     //     //create HTTPS server
     //     let serverRequest = function (request, response) {
-    //         response.writeHead("200");
-    //         response.end("Test SSL response");
+    //         response.writeHead("200", {'Content-Type':"application/json"});
+    //         response.end(`{message:"Test SSL response" }`);
     //     }
     //     const options = {
     //         key: generationResult.key,
-    //         cert: generationResult.cert
+    //         cert: generationResult.chained
     //     };
     //     let server = https.createServer(options, serverRequest).listen(8580);
 
@@ -143,9 +144,16 @@ describe('internal-test', function () {
     //     exec('start chrome https://localhost:8580', function (err) { });
     //     //cleanup certs
     //     let certFileStats = await autoSelfSign.internal.checkCertFiles(config);
+    //     let result = await axios.get('https://localhost:8580').catch((e)=>{
+    //         console.log(e);
+    //     });
+    //     result = result.data;
     //     fs.unlinkSync(certFileStats.pkcs12.filePath);
     //     fs.unlinkSync(certFileStats.cert.filePath);
     //     fs.unlinkSync(certFileStats.key.filePath);
+    //     fs.unlinkSync(certFileStats.chained.filePath);
+    //     fs.unlinkSync(certFileStats.intermediate.filePath);
+
     //     setTimeout(() => {
     //         server.close();
     //     }, 4000);

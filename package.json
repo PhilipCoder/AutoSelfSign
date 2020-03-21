@@ -1,0 +1,38 @@
+{
+  "name": "auto.self.sign",
+  "version": "1.0.0",
+  "description": "Auto Self Sign is a NodeJS package that creates, installs and serve self-signed certificates for Windows. It allows to you develop on HTTPS easily.",
+  "main": "autoSelfSign.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "axios": "^0.19.2",
+    "chai": "^4.2.0",
+    "mocha": "^7.1.1"
+  },
+  "dependencies": {
+    "pem": "^1.14.4"
+  },
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PhilipCoder/AutoSelfSign"
+  },
+  "keywords": [
+    "HTTPS",
+    "Certificate"
+  ],
+  "author": "Philip Schoeman",
+  "license": "LGPL-2.1-only",
+  "bugs": {
+    "url": "https://github.com/PhilipCoder/willCore.core/issues"
+  },
+  "homepage": "https://github.com/PhilipCoder/AutoSelfSign#readme",
+  "files": [
+    "/bin",
+    "/models"
+  ]
+}
