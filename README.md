@@ -19,7 +19,7 @@ ____
 
 Install via NPM :
 ```javascript
-NPM install auto.self.sign
+npm install auto.self.sign
 ```
 
 ## Using

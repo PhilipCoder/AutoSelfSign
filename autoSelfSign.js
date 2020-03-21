@@ -24,6 +24,7 @@ async function autoSelfSign(config) {
     return { ...x509Values, pkcs12GenerationResult, certInstallationResult };
 }
 
+//If any errors were encountered during the generation or installation process, delete the certificate files.
 async function cleanup(config, pkcs12GenerationResult, certInstallationResult) {
     if (!pkcs12GenerationResult.hasError && !certInstallationResult.hasError) return;
     let certFileStats = await checkCertFiles(config);
@@ -32,6 +33,7 @@ async function cleanup(config, pkcs12GenerationResult, certInstallationResult) {
     if (certFileStats.pkcs12.fileExists) fs.unlinkSync(certFileStats.pkcs12.filePath);
 }
 
+//Installs the certificate into the windows Trusted Root Store.
 function installCertificate(config, certFileStats, certStatsPKCS12) {
     return new Promise((resolve, reject) => {
         if (!config.installCertWindows || certFileStats.pkcs12.fileExists) {
@@ -62,12 +64,14 @@ function installCertificate(config, certFileStats, certStatsPKCS12) {
     });
 }
 
+//Saves the generated x.509 values 
 function saveX509Values(certFileStats, x509Values) {
     if (certFileStats.pkcs12.fileExists) return;
     fs.writeFileSync(certFileStats.cert.filePath, x509Values.cert);
     fs.writeFileSync(certFileStats.key.filePath, x509Values.key);
 }
 
+//Generate x.509 values from the PKCS12 certificate using OpenSSL.
 function generateCert(certFileStats, certStatsPKCS12) {
     return new Promise((resolve, reject) => {
         if (certFileStats.pkcs12.fileExists && certFileStats.cert.fileExists && certFileStats.key.fileExists) {
@@ -87,6 +91,7 @@ function generateCert(certFileStats, certStatsPKCS12) {
     });
 }
 
+//Generate the PKCS12 certificate using makecert.
 function generatePKCS12(certFileStats, config) {
     return new Promise((resolve, reject) => {
         if (certFileStats.pkcs12.fileExists) {
@@ -121,6 +126,7 @@ function generatePKCS12(certFileStats, config) {
     });
 }
 
+//Validates the configuration file.
 /** @param {import('./models/config.js')} config */
 function validateConfig(config) {
     if (!(config)) throw "Config is not a config model.";
@@ -128,6 +134,7 @@ function validateConfig(config) {
     if (!esd) throw `Cert directory "${config.certificateFolder}" does not exist.`;
 }
 
+//Checks if the cert files exists and returns the paths to the files.
 /** @param {import('./models/config.js')} config  */
 async function checkCertFiles(config) {
     return {
@@ -143,6 +150,7 @@ async function checkCertFiles(config) {
     };
 }
 
+//Checks if the PKCS12 certificate file exists.
 /** @param {import('./models/config.js')} config  */
 function pkcs12Exists(config) {
     return new Promise((resolve, reject) => {
